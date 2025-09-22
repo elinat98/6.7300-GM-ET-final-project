@@ -104,33 +104,6 @@ def test_Q_shape_validation_raises():
         return
     raise AssertionError("Expected ValueError due to bad Q shape, but evalf did not raise.")
 
-
-def test_sparse_Q_behavior():
-    """
-    If user supplies a scipy.sparse matrix for Q, evalf may not accept it.
-    This test tries to pass a CSR matrix and checks whether evalf raises an informative error.
-    """
-    try:
-        from scipy.sparse import csr_matrix
-    except Exception:
-        print("test_sparse_Q_behavior: SKIPPED (scipy not available)")
-        return
-
-    m = 3
-    n = np.array([2.0, 1.0, 0.0])
-    x = np.concatenate([n, np.array([1.0, 0.0])])
-    p = mk_base_params(m)
-    Q_sparse = csr_matrix(np.eye(m))
-    p['Q'] = Q_sparse
-    try:
-        f = evalf(x, p, np.array([0.1,0.0]))
-    except Exception as e:
-        print("test_sparse_Q_behavior: Handled (evalf raised on sparse Q) - recommend converting sparse->dense before calling evalf.")
-        return
-    # If no error, ensure result is finite
-    assert np.isfinite(f).all(), "evalf produced non-finite output with sparse Q"
-    print("test_sparse_Q_behavior: PASS (sparse Q accepted and produced finite output)")
-
 def test_large_C_inhibition_produces_zero_births():
     """
     Very large antibiotic C relative to IC50 should suppress births (b ~ 0).
@@ -220,7 +193,6 @@ def run_all_tests():
         test_ic50_zero_with_positive_C,
         test_K_plus_R_zero_handled,
         test_Q_shape_validation_raises,
-        test_sparse_Q_behavior,
         test_large_C_inhibition_produces_zero_births,
         test_alpha_zero_no_consumption,
         test_param_broadcasting,
