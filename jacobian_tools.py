@@ -17,6 +17,7 @@ def evaljacobianf(x, p, u):
     R = x[m]
     C = x[m+1]
 
+    # Force shapes to vectors with length m
     Q = np.asarray(p['Q'], dtype=float)
     rmax = np.asarray(p['rmax'], dtype=float).reshape(m,)
     K = np.asarray(p['K'], dtype=float).reshape(m,)
@@ -26,12 +27,12 @@ def evaljacobianf(x, p, u):
     h = np.asarray(p['h'], dtype=float).reshape(m,)
     kC = float(p['kC'])
 
-    # Monod term and derivative
+    # Monod term and derivative 
     denom = K + R
     monod = np.where(denom != 0.0, R / denom, 0.0)
     dmonod_dR = np.where(denom != 0.0, K / (denom**2), 0.0)  # derivative of R/(K+R)
 
-    # Hill term and derivative wrt C (safe handling of IC50==0)
+    # Hill term and derivative wrt C (safe handling of IC50==0) 
     ratio = np.zeros(m)
     nonzero_ic50 = IC50 != 0.0
     if np.any(nonzero_ic50):
@@ -64,27 +65,28 @@ def evaljacobianf(x, p, u):
     db_dR = rmax * dmonod_dR * hill
     db_dC = rmax * monod * dhill_dC
 
+    # Allocate jacobian matrix (full size = (m+2)x(m+2))
     N = m + 2
     J = np.zeros((N, N), dtype=float)
 
-    # Top-left block: ∂f_i / ∂n_k = b_k * Q[k,i] - d_i * delta(i,k)
+    # Top-left block: ∂f_i / ∂n_k = b_k * Q[k,i] - d_i * delta(i,k) - > death term is subtracted on the diagonal 
     for i in range(m):
         for k in range(m):
             J[i, k] = b[k] * Q[k, i]
         J[i, i] -= d0[i]
 
     # Top-right: ∂f_i/∂R and ∂f_i/∂C
-    # ∂f_i/∂R = sum_j n_j * db_j/dR * Q[j,i]
+    # ∂f_i/∂R = sum_j n_j * db_j/dR * Q[j,i] -> chain rule + similarity for C 
     for i in range(m):
         J[i, m] = np.sum((n * db_dR) * Q[:, i])
         J[i, m+1] = np.sum((n * db_dC) * Q[:, i])
 
-    # R row
+    # R row - > resource index (row index = m) 
     J[m, :m] = - alpha * b                       # ∂R_dot/∂n_k = -alpha_k * b_k
     J[m, m] = -1.0 - np.sum(alpha * n * db_dR)  # ∂R_dot/∂R
     J[m, m+1] = - np.sum(alpha * n * db_dC)     # ∂R_dot/∂C
 
-    # C row
+    # C row -> antibiotic index (row index = m+ 1) 
     J[m+1, m+1] = -1.0 - kC
 
     return J
@@ -114,6 +116,7 @@ def finite_difference_jacobian(f, x, p, u, dx_option='scaled', method='central')
     M = f0.size
     J = np.zeros((M, N), dtype=float)
 
+    #loop over state components -> option for either forward difference (less cost (O(dx)) vs. central difference, more accurate higher cost (O(dx^2)))
     for k in range(N):
         ek = np.zeros(N, dtype=float); ek[k] = 1.0
         dxk = dx[k]
