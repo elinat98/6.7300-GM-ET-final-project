@@ -35,7 +35,7 @@ def mk_base_params(m):
     }
 
 def test_zero_resource_no_births():
-    """R=0 -> monod term 0 -> b=0 -> n_dot = -d*n and R_dot = uR (no consumption)."""
+    """R=0 -> monod term 0 -> b=0 -> n_dot = -d*n and R_dot = uR (no consumption). genotype dynamics are reduced to pure death"""
     m = 4
     n = np.array([10., 5., 2., 1.])
     R = 0.0
@@ -46,14 +46,14 @@ def test_zero_resource_no_births():
     f = evalf(x, p, u)
     expected_n_dot = - p['d0'] * n
     assert_allclose(f[:m], expected_n_dot, rtol=1e-8, atol=1e-12)
-    # Because b=0 consumption=0 -> R_dot = uR - R = uR
+    # Because b=0 consumption=0 -> R_dot = uR - R = uR 
     assert np.isclose(f[m], u[0]), f"R_dot expected {u[0]} but got {f[m]}"
     print("test_zero_resource_no_births: PASS")
 
 def test_ic50_zero_with_positive_C():
     """
     IC50 == 0 treated as infinite inhibition when C>0 -> hill ~ 0 -> b ~ 0.
-    So behavior same as R=0 case for b.
+    So behavior same as R=0 case for b. (C/IC50)^h is effectively infinite, reduce to b = 0. 
     """
     m = 3
     n = np.array([3.0, 2.0, 1.0])
