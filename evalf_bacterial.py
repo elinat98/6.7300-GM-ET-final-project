@@ -1,6 +1,7 @@
 # evalf_bacterial.py
 import numpy as np
 import warnings
+import scipy
 
 def evalf(x, p, u):
     """
