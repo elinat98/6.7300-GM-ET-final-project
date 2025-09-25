@@ -131,6 +131,30 @@ def finite_difference_jacobian(f, x, p, u, dx_option='scaled', method='central')
             raise ValueError("Unknown method")
     return J
 
+    # supply a wrapped evalf that coerces incoming x to 1-D before calling real eval_f
+    def evalf_wrapped(x_in, p_in, u_in):
+        # x_in may be a column vector array (N,1) or 1-D; make it 1-D
+        x1 = np.asarray(x_in).ravel()
+        return np.asarray(eval_f(x1, p_in, u_in), dtype=float)
+
+    # create column-shaped x0 (N,1) for the external function to index into
+    x_col = np.asarray(x).reshape((N, 1))
+
+    # call the external function (it returns (Jf, dxFD) in the version you showed)
+    result = external_eval(evalf_wrapped, x_col, p, u)
+
+    # external function might return either Jf (only) or (Jf, dxFD) tuple.
+    # normalize to (Jf, dxFD)
+    if isinstance(result, tuple) and len(result) == 2:
+        Jf, dxFD = result
+    else:
+        Jf = result
+        dxFD = None
+
+    # ensure numpy arrays and correct shapes
+    Jf = np.asarray(Jf, dtype=float)
+    return Jf, dxFD
+
 
 def jacobian_testbench(f_eval, x, p, u, dx_factors=None):
     """

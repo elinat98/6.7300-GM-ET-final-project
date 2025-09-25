@@ -1,17 +1,23 @@
 #!/usr/bin/env python3
 """
-Improved Jacobian dx-sweep + plot: plot vs absolute dx (geometric mean) and save CSV.
+Jacobian dx-sweep using external eval_Jf_FiniteDifference (scalar forward-diff).
+Saves a CSV and a log-log plot of Frobenius error vs absolute dx scalar.
 
-Place next to evalf_bacterial.py and jacobian_tools.py and run:
-    python test_jacobian_sweep_plot_improved.py
+Place next to:
+  - evalf_bacterial.py      (must accept column (N,1) and 1-D inputs)
+  - jacobian_tools.py
+  - eval_Jf_FiniteDifference.py  (external FD function that expects column x)
+Run:
+  python test_jacobian_sweep_plot_externalFD.py
 """
 
 import numpy as np
 import matplotlib.pyplot as plt
 from pathlib import Path
-import warnings
 import csv
+import warnings
 
+# imports
 try:
     from evalf_bacterial import evalf
 except Exception as e:
@@ -20,7 +26,12 @@ try:
     from jacobian_tools import evaljacobianf
 except Exception as e:
     raise ImportError("Cannot import evaljacobianf from jacobian_tools.py: " + str(e))
+try:
+    from eval_Jf_FiniteDifference import eval_Jf_FiniteDifference as external_evalJ
+except Exception as e:
+    raise ImportError("Cannot import external eval_Jf_FiniteDifference: " + str(e))
 
+# model / point to test
 m = 3
 p = {
     'Q': np.eye(m),
@@ -32,97 +43,95 @@ p = {
     'h': np.array([1.0, 1.0, 1.0]),
     'kC': 0.05
 }
-x = np.array([10.0, 5.0, 2.0, 1.0, 0.2])
+
+x_flat = np.asarray([10.0, 5.0, 2.0, 1.0, 0.2])   # 1-D preferred for analytic jacobian
+N = x_flat.size
+x_col = x_flat.reshape((N, 1))                    # column vector for external FD
 u = np.array([0.5, 0.1])
 
-J_analytic = evaljacobianf(x, p, u)
+# analytic Jacobian (make sure it's a numeric numpy array)
+J_analytic = np.asarray(evaljacobianf(x_flat, p, u), dtype=float)
+if J_analytic.shape != (N, N):
+    raise RuntimeError(f"Analytic Jacobian has unexpected shape {J_analytic.shape}, expected {(N,N)}")
 
-# base per-component dx (scaled)
+# base scalar dx consistent with external function's heuristic:
 eps = np.finfo(float).eps
-base_dx = 2.0 * np.sqrt(eps) * np.maximum(1.0, np.abs(x))
+base_dx_scalar = 2.0 * np.sqrt(eps) * np.sqrt(1.0 + np.linalg.norm(x_flat, np.inf))
+print(f"Base scalar dx (external FD heuristic) = {base_dx_scalar:.3e}")
 
-# factors: user asked to go up to 1e5 (and down to 1e-12)
-dx_factors = np.logspace(5, -12, num=100)   # fine sampling
+# factors to sweep — up to 1e5 down to 1e-12 (you can change these)
+dx_factors = np.logspace(5, -12, num=100)
 
-def finite_diff_jacobian_central(f, x, p, u, dx_vec):
-    x = np.asarray(x, dtype=float)
-    N = x.size
-    f0 = np.asarray(f(x, p, u), dtype=float)
-    M = f0.size
-    J_fd = np.zeros((M, N), dtype=float)
-    for k in range(N):
-        ek = np.zeros(N); ek[k] = 1.0
-        dxk = dx_vec[k]
-        if dxk == 0.0:
-            raise ValueError("dx component is zero.")
-        if dxk <= np.finfo(float).eps:
-            warnings.warn(f"dx[{k}] <= machine epsilon; FD dominated by roundoff", RuntimeWarning)
-        fk_plus = np.asarray(f(x + dxk * ek, p, u), dtype=float)
-        fk_minus = np.asarray(f(x - dxk * ek, p, u), dtype=float)
-        J_fd[:, k] = (fk_plus - fk_minus) / (2.0 * dxk)
-    return J_fd
-
-# run sweep, compute errors, and representative dx scalar per factor
+# storage
+dx_scalars = []
 errors = []
-dx_scalars = []   # geometric mean of dx_vec
-for fac in dx_factors:
-    dx_vec = base_dx * fac
-    # representative scalar: geometric mean of dx_vec (avoid zeros)
-    dx_scalar = np.exp(np.mean(np.log(np.abs(dx_vec))))
-    dx_scalars.append(dx_scalar)
-    J_fd = finite_diff_jacobian_central(evalf, x, p, u, dx_vec)
-    err = np.linalg.norm(J_fd - J_analytic, ord='fro')
-    errors.append(err)
 
+# run sweep: set p_temp['dxFD'] scalar and call external_evalJ(evalf, x_col, p_temp, u)
+for fac in dx_factors:
+    dx_scalar = base_dx_scalar * fac
+    p_temp = dict(p)  # shallow copy of p
+    p_temp['dxFD'] = float(dx_scalar)   # external expects scalar p.dxFD
+    # call external function (it may return J or (J, dx) per variant)
+    result = external_evalJ(evalf, x_col, p_temp, u)
+    if isinstance(result, tuple) and len(result) == 2:
+        J_fd, used_dx = result
+    else:
+        J_fd = result
+        used_dx = p_temp['dxFD']   # fallback, should normally not happen
+    J_fd = np.asarray(J_fd, dtype=float)
+    # ensure shapes
+    if J_fd.shape != (N, N):
+        raise RuntimeError(f"External FD returned shape {J_fd.shape} (expected {(N,N)}) for factor {fac:.1e}. "
+                           f"Check evalf's return shape when called with column inputs.")
+    # compute Frobenius error
+    diff_norm = np.linalg.norm(J_fd - J_analytic, ord='fro')
+    dx_scalars.append(float(used_dx))
+    errors.append(diff_norm)
+
+# convert to arrays
 dx_scalars = np.array(dx_scalars)
 errors = np.array(errors)
 
-# Save table for inspection
-out_csv = Path('jacobian_error_table.csv')
-with out_csv.open('w', newline='') as f:
-    writer = csv.writer(f)
-    writer.writerow(['factor','dx_scalar','error'])
+# save CSV
+out_csv = Path("jacobian_error_table_externalFD.csv")
+with out_csv.open("w", newline="") as fh:
+    writer = csv.writer(fh)
+    writer.writerow(["factor", "dx_scalar", "frobenius_error"])
     for fac, dxs, err in zip(dx_factors, dx_scalars, errors):
         writer.writerow([f"{fac:.5e}", f"{dxs:.5e}", f"{err:.5e}"])
+print("Saved CSV:", out_csv.resolve())
 
-# find min
+# find minimum error
 imin = np.argmin(errors)
 best_fac = dx_factors[imin]
 best_dx = dx_scalars[imin]
 best_err = errors[imin]
-print(f"min error {best_err:.3e} at factor {best_fac:.3e}, dx_scalar {best_dx:.3e}")
+print(f"Minimum Frobenius error {best_err:.3e} at dx_factor = {best_fac:.3e}, dx = {best_dx:.3e}")
 
-# Plot: error vs absolute dx scalar 
+# Plot error vs absolute scalar dx
 fig, ax = plt.subplots(figsize=(8,5))
-ax.loglog(dx_scalars, errors, marker='o', linestyle='-', markersize=4)
-ax.set_xlabel('Representative absolute dx')
-ax.set_ylabel('Frobenius norm error')
-ax.set_title('Jacobian FD error vs absolute dx ')
+ax.loglog(dx_scalars, errors, marker='o', linestyle='-')
+ax.set_xlabel('Absolute scalar dx used by external FD')
+ax.set_ylabel('Frobenius norm error ||J_fd - J_analytic||_F')
+ax.set_title('Jacobian FD error vs absolute scalar dx (external eval_Jf_FiniteDifference)')
 ax.grid(True, which='both', ls='--')
 
-# mark the minimum with a small square marker
+# mark minimum and annotate in top-right
 ax.plot([best_dx], [best_err], marker='s', markersize=8, color='tab:red')
-
-# place the annotation text in the top-right corner of the axes and draw an arrow to the min point
 ax.annotate(
     f"min err={best_err:.2e}\nfac={best_fac:.2e}\ndx={best_dx:.2e}",
-    xy=(best_dx, best_err),                # point being annotated (data coords)
+    xy=(best_dx, best_err),
     xycoords='data',
-    xytext=(0.98, 0.98),                   # target text position in axes fraction coords (top-right)
+    xytext=(0.98, 0.98),
     textcoords='axes fraction',
     ha='right', va='top',
     fontsize=9,
+    arrowprops=dict(arrowstyle='->', color='tab:red', lw=1.0),
     bbox=dict(boxstyle='round,pad=0.3', fc='white', ec='none', alpha=0.9)
 )
-# Optionally show vertical lines for base_dx values (for intuition)
-mean_base = np.exp(np.mean(np.log(base_dx)))
-ax.axvline(mean_base, color='gray', linestyle=':', linewidth=1, label='mean base dx')
-ax.legend()
 
-out_png = Path('jacobian_error_vs_dx_scalar.png')
+out_png = Path('jacobian_error_vs_dx_scalar_externalFD.png')
 fig.tight_layout()
 fig.savefig(out_png, bbox_inches='tight')
 plt.close(fig)
-
 print("Saved plot to:", out_png.resolve())
-print("Saved table to:", out_csv.resolve())
