@@ -1,7 +1,7 @@
 # run_simplesolver.py
 import numpy as np
 from evalf_bacterial import evalf
-from SimpleSolver import SimpleSolver   # ensure name matches file/class
+from tools.SimpleSolver import SimpleSolver   # ensure name matches file/class
 import matplotlib.pyplot as plt
 
 # --- problem & params ---

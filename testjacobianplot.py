@@ -16,20 +16,9 @@ import matplotlib.pyplot as plt
 from pathlib import Path
 import csv
 import warnings
-
-# imports
-try:
-    from evalf_bacterial import evalf
-except Exception as e:
-    raise ImportError("Cannot import evalf from evalf_bacterial.py: " + str(e))
-try:
-    from jacobian_tools import evaljacobianf
-except Exception as e:
-    raise ImportError("Cannot import evaljacobianf from jacobian_tools.py: " + str(e))
-try:
-    from eval_Jf_FiniteDifference import eval_Jf_FiniteDifference as external_evalJ
-except Exception as e:
-    raise ImportError("Cannot import external eval_Jf_FiniteDifference: " + str(e))
+from evalf_bacterial import evalf
+from jacobian_tools import evaljacobianf
+tools.eval_Jf_FiniteDifference import eval_Jf_FiniteDifference as external_evalJ
 
 # model / point to test
 m = 3

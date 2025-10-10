@@ -1,5 +1,5 @@
 import numpy as np
-from VisualizeState import VisualizeState
+from .VisualizeState import VisualizeState
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation 
 from functools import partial

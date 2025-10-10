@@ -42,22 +42,34 @@ def evaljacobianf(x, p, u):
         ratio[~nonzero_ic50] = np.inf if C > 0 else 0.0
     hill = 1.0 / (1.0 + ratio)
 
-    # dhill/dC safe computation
-    dhill_dC = np.zeros(m)
-    mask = nonzero_ic50 & (IC50 != 0.0)
+    # dhill/dC safe computation (correct limit at C==0)
+    dhill_dC = np.zeros(m, dtype=float)
+    # mask for entries with IC50 != 0 (we handle IC50==0 separately)
+    nonzero_ic50 = IC50 != 0.0
+    mask = nonzero_ic50.copy()
+
     if np.any(mask):
-        s = np.zeros(m)
-        if C != 0:
+        # compute s = (C/IC50)^h safely
+        s = np.zeros(m, dtype=float)
+        if C != 0.0:
             s[mask] = (C / IC50[mask]) ** h[mask]
         else:
+            # at C==0, s = 0 for h>0
             s[mask] = 0.0
-        ds_dC = np.zeros(m)
-        valid = mask & (h != 0)
-        if np.any(valid):
-            if C != 0:
-                ds_dC[valid] = h[valid] * (C / IC50[valid]) ** (h[valid] - 1) / IC50[valid]
-            else:
-                ds_dC[valid] = 0.0
+
+        # compute ds/dC with correct C->0 limits:
+        ds_dC = np.zeros(m, dtype=float)
+        # entries where h == 1 --> ds/dC = 1/IC50 even at C==0
+        idx_h1 = mask & (np.isclose(h, 1.0))
+        if np.any(idx_h1):
+            ds_dC[idx_h1] = 1.0 / IC50[idx_h1]
+        # entries where h > 1 --> ds/dC = 0 at C==0 (already zero)
+        # entries where C != 0 and h arbitrary --> use analytic formula
+        idx_Cnonzero = mask & (C != 0.0)
+        if np.any(idx_Cnonzero):
+            ds_dC[idx_Cnonzero] = h[idx_Cnonzero] * (C / IC50[idx_Cnonzero]) ** (h[idx_Cnonzero] - 1) / IC50[idx_Cnonzero]
+
+        # final dhill/dC
         dhill_dC = - ds_dC / (1.0 + s)**2
 
     # birth rates and their derivatives
@@ -90,70 +102,6 @@ def evaljacobianf(x, p, u):
     J[m+1, m+1] = -1.0 - kC
 
     return J
-
-
-def finite_difference_jacobian(f, x, p, u, dx_option='scaled', method='central'):
-    """
-    Finite-difference Jacobian approximation.
-    dx_option: 'eps_sqrt' | 'scaled' | 'norm'
-    method: 'forward' | 'central'
-    returns J_approx of shape (M, N) where M = len(f(x)), N = len(x)
-    """
-    x = np.asarray(x, dtype=float)
-    N = x.size
-    eps = np.finfo(float).eps
-    if dx_option == 'eps_sqrt':
-        dx = np.sqrt(eps) * np.ones(N)
-    elif dx_option == 'scaled':
-        dx = 2.0 * np.sqrt(eps) * np.maximum(1.0, np.abs(x))
-    elif dx_option == 'norm':
-        dx_scalar = 2.0 * np.sqrt(eps) * max(1.0, np.linalg.norm(x))
-        dx = dx_scalar * np.ones(N)
-    else:
-        raise ValueError("Unknown dx_option")
-
-    f0 = np.asarray(f(x, p, u), dtype=float)
-    M = f0.size
-    J = np.zeros((M, N), dtype=float)
-
-    #loop over state components -> option for either forward difference (less cost (O(dx)) vs. central difference, more accurate higher cost (O(dx^2)))
-    for k in range(N):
-        ek = np.zeros(N, dtype=float); ek[k] = 1.0
-        dxk = dx[k]
-        if method == 'forward':
-            fk = np.asarray(f(x + dxk * ek, p, u), dtype=float)
-            J[:, k] = (fk - f0) / dxk
-        elif method == 'central':
-            fk_plus = np.asarray(f(x + dxk * ek, p, u), dtype=float)
-            fk_minus = np.asarray(f(x - dxk * ek, p, u), dtype=float)
-            J[:, k] = (fk_plus - fk_minus) / (2.0 * dxk)
-        else:
-            raise ValueError("Unknown method")
-    return J
-
-    # supply a wrapped evalf that coerces incoming x to 1-D before calling real eval_f
-    def evalf_wrapped(x_in, p_in, u_in):
-        # x_in may be a column vector array (N,1) or 1-D; make it 1-D
-        x1 = np.asarray(x_in).ravel()
-        return np.asarray(eval_f(x1, p_in, u_in), dtype=float)
-
-    # create column-shaped x0 (N,1) for the external function to index into
-    x_col = np.asarray(x).reshape((N, 1))
-
-    # call the external function (it returns (Jf, dxFD) in the version you showed)
-    result = external_eval(evalf_wrapped, x_col, p, u)
-
-    # external function might return either Jf (only) or (Jf, dxFD) tuple.
-    # normalize to (Jf, dxFD)
-    if isinstance(result, tuple) and len(result) == 2:
-        Jf, dxFD = result
-    else:
-        Jf = result
-        dxFD = None
-
-    # ensure numpy arrays and correct shapes
-    Jf = np.asarray(Jf, dtype=float)
-    return Jf, dxFD
 
 
 def jacobian_testbench(f_eval, x, p, u, dx_factors=None):
