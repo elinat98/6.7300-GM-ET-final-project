@@ -1,6 +1,18 @@
 # tests/test_linearize.py
 import numpy as np
-from tools.linearize import linearize_f
+import os, sys
+from tools.SimpleSolver import SimpleSolver
+
+try:
+    from tools.linearize import linearize_f
+except ModuleNotFoundError:
+    # add project root and retry
+    THIS_DIR = os.path.dirname(__file__)
+    PROJECT_ROOT = os.path.abspath(os.path.join(THIS_DIR, ".."))
+    if PROJECT_ROOT not in sys.path:
+        sys.path.insert(0, PROJECT_ROOT)
+    from tools.linearize import linearize_f
+
 
 def evalf_linear(x, p, u):
     """
