@@ -11,7 +11,7 @@ Place this file in the tests/ directory. It runs early during pytest collection 
 
 import os
 import sys
-
+import pytest 
 # 1) Make sure project root (parent of tests/) is on sys.path
 THIS_DIR = os.path.dirname(__file__)           # path/to/project/tests
 PROJECT_ROOT = os.path.abspath(os.path.join(THIS_DIR, ".."))
@@ -51,3 +51,63 @@ except Exception:
 #         'h': np.ones(m),
 #         'kC': 0.05
 #     }
+@pytest.fixture(autouse=True)
+def disable_plots(monkeypatch):
+    """
+    Force matplotlib to use a non-interactive backend and monkeypatch plt.show
+    so tests do not open GUI windows. This fixture is autouse so it applies
+    to all tests in the test session.
+    """
+    # Set MPL backend env var early so matplotlib picks it up on import
+    os.environ.setdefault("MPLBACKEND", "Agg")
+
+    # If matplotlib already imported, switch backend where possible:
+    try:
+        import matplotlib
+        try:
+            matplotlib.use("Agg", force=True)
+        except Exception:
+            pass
+    except Exception:
+        pass
+
+    # no-op for plt.show
+    def _noop_show(*args, **kwargs):
+        return None
+
+    # patch pyplot.show if pyplot already imported
+    try:
+        import matplotlib.pyplot as plt
+        monkeypatch.setattr(plt, "show", _noop_show)
+        if hasattr(plt, "pause"):
+            monkeypatch.setattr(plt, "pause", lambda *a, **k: None)
+    except Exception:
+        # otherwise patch import_module so when pyplot is later imported we patch it
+        orig_import = importlib.import_module
+
+        def _import_and_patch(name, package=None):
+            mod = orig_import(name, package=package)
+            if name == "matplotlib.pyplot":
+                try:
+                    import matplotlib.pyplot as _plt  # noqa: F401
+                    monkeypatch.setattr(_plt, "show", _noop_show)
+                    if hasattr(_plt, "pause"):
+                        monkeypatch.setattr(_plt, "pause", lambda *a, **k: None)
+                except Exception:
+                    pass
+            return mod
+
+        monkeypatch.setattr(importlib, "import_module", _import_and_patch)
+
+    # monkeypatch Tk if used
+    try:
+        import tkinter as tk
+        class _DummyTk:
+            def __init__(self, *a, **k): pass
+            def withdraw(self, *a, **k): pass
+            def destroy(self, *a, **k): pass
+        monkeypatch.setattr(tk, "Tk", _DummyTk)
+    except Exception:
+        pass
+
+    yield

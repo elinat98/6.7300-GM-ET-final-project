@@ -1,138 +1,133 @@
 # linearize.py
 """
-Linearization helper for f(x,p,u).
+Linearization helper for the project.
 
-Main function:
-    A, Ju, K0, B = linearize_f(evalf, evaljacobianf=None, x0, p, u0, du=None, fd_method='central')
-
-- evalf(x, p, u) should return f(x,p,u). Accepts either:
-    * 1-D x (shape (N,)) -> evalf returns 1-D shape (N,)
-    * column x (shape (N,1)) -> evalf may return column (N,1) or 1-D
-  The function below normalizes shapes so you can pass either.
-
-- If evaljacobianf is provided it will be used to compute A = df/dx.
-  If None, a finite-difference jacobian is computed (calls jacobian_tools.finite_difference_jacobian).
+Provides linearize_f(f_eval, J_eval, x0, p, u0, ...) which computes
+A = df/dx (at x0,u0), Ju = df/du (at x0,u0), K0 = f(x0,u0) - A x0 - Ju u0
 
 Returns:
-  A   : (N,N) df/dx
-  Ju  : (N, m_u) df/du
-  K0  : (N,) constant term defined by K0 = f0 - A @ x0 - Ju @ u0
-  B   : (N, m_u+1) combined [K0, Ju]
+  A : (N,N) numpy array
+  B : (N, 1 + m_u) numpy array  # [ K0 | Ju ]
 """
 
-from typing import Callable, Optional, Tuple
 import numpy as np
 
-def _as_1d_or_col(x):
-    """Return (flat1d, was_column_bool)"""
-    arr = np.asarray(x, dtype=float)
-    if arr.ndim == 2 and arr.shape[1] == 1:
-        return arr.ravel(), True
-    else:
-        return arr.ravel(), False
+# try to import external FD Jacobian (user said it's in tools)
+try:
+    from tools.eval_Jf_FiniteDifference import eval_Jf_FiniteDifference as external_evalJ
+except Exception:
+    external_evalJ = None
 
-def _normalize_f_output(fout):
-    """Return 1-D numpy array from evalf output which may be (N,) or (N,1)"""
-    arr = np.asarray(fout, dtype=float)
-    if arr.ndim == 2 and arr.shape[1] == 1:
-        return arr.ravel()
-    return arr.ravel()
 
-def linearize_f(
-    evalf: Callable,
-    evaljacobianf: Optional[Callable],
-    x0,
-    p,
-    u0,
-    du: Optional[float or np.ndarray] = None,
-    fd_method: str = 'central'
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+def _ensure_flat_vector(x):
+    """Return 1-D numpy array from x which may be (N,) or (N,1)."""
+    x = np.asarray(x, dtype=float)
+    if x.ndim == 2 and x.shape[1] == 1:
+        return x.ravel()
+    return x.ravel()
+
+
+def linearize_f(f_eval, J_eval, x0, p, u0, du=1e-6, fd_method='central'):
     """
-    Linearize f about (x0, u0).
+    Linearize f around (x0,u0).
 
     Parameters
     ----------
-    evalf : callable(x, p, u) -> f
-    evaljacobianf : callable(x, p, u) -> Jf or None
-        If None -> compute finite-difference Jacobian using jacobian_tools.finite_difference_jacobian.
-    x0 : array-like (N,) or (N,1)
-    p : parameter dict (passed through to evalf and evaljacobianf)
-    u0 : array-like (m_u,)
-    du : scalar or array-like (m_u,) perturbation for finite-difference on inputs (optional)
-    fd_method : 'central' or 'forward'
+    f_eval : callable
+        f_eval(x, p, u) returning f(x,p,u). Accepts either 1-D x (N,) or column (N,1).
+    J_eval : callable or None
+        If callable, should return analytic Jacobian J(x,p,u) (shape (N,N)).
+        If None, we will use external finite-difference function in tools (if available).
+    x0 : array-like
+        bias state (N,) or (N,1)
+    p : dict
+        parameters passed to f_eval and to external FD
+    u0 : array-like
+        bias input (m_u,) or (m_u,1)
+    du : float or array-like
+        finite-difference step for u-derivatives (scalar or per-component).
+    fd_method : 'forward'|'central'
+        method for u finite-difference (central recommended)
 
     Returns
     -------
-    A : (N,N) df/dx
-    Ju: (N,m_u) df/du
-    K0: (N,) constant vector with K0 = f(x0,u0) - A x0 - Ju u0
-    B : (N, m_u+1) concatenation [K0 (col), Ju]
+    A : ndarray (N,N)
+    B : ndarray (N, 1 + m_u)  # columns: [K0, Ju_col0, Ju_col1, ...]
     """
-    # normalize x0 and detect column
-    x0_flat, was_col = _as_1d_or_col(x0)
-    x0 = x0_flat.copy()
+    # normalize x0 and u0 shapes
+    x0_flat = _ensure_flat_vector(x0)
     u0 = np.asarray(u0, dtype=float).ravel()
-
-    N = x0.size
+    N = x0_flat.size
     m_u = u0.size
 
-    # evaluate f0
-    f0 = _normalize_f_output(evalf(x0 if not was_col else x0.reshape((N,1)), p, u0))
+    # Evaluate f at the bias point
+    # Keep return shape consistent: we convert any column to flat 1-D
+    f0_raw = f_eval(x0 if (np.asarray(x0).ndim == 2 and np.asarray(x0).shape[1] == 1) else x0_flat, p, u0)
+    f0 = np.asarray(f0_raw, dtype=float).ravel()
+    if f0.size != N:
+        raise ValueError(f"f(x0,p,u0) returned shape {np.shape(f0_raw)} -> flattened {f0.size}, expected {N}")
 
-    # A: analytic or FD
-    if evaljacobianf is not None:
-        A = np.asarray(evaljacobianf(x0, p, u0), dtype=float)
-        if A.shape != (N, N):
-            raise ValueError(f"evaljacobianf returned shape {A.shape}, expected {(N,N)}")
+    # Compute A (df/dx)
+    if callable(J_eval):
+        # user provided analytic Jacobian
+        J_analytic = np.asarray(J_eval(x0_flat, p, u0), dtype=float)
+        if J_analytic.shape != (N, N):
+            raise ValueError(f"Analytic Jacobian returned shape {J_analytic.shape}, expected {(N,N)}")
+        A = J_analytic
     else:
-        # lazy import to avoid a hard dependency if user supplies analytic function
-        try:
-            from jacobian_tools import finite_difference_jacobian
-        except Exception as e:
-            raise ImportError("No analytic jacobian supplied and unable to import jacobian_tools.finite_difference_jacobian") from e
-        # finite_difference_jacobian expects evalf signature f(x,p,u)
-        A = np.asarray(finite_difference_jacobian(evalf, x0, p, u0, dx_option='scaled', method='central'), dtype=float)
-        if A.shape != (N, N):
-            # finite_difference_jacobian returns (M,N) matrix; enforce square
-            raise ValueError(f"finite_difference_jacobian returned shape {A.shape}, expected {(N,N)}")
-
-    # Ju: compute by finite-difference in u
-    eps = np.finfo(float).eps
-    if du is None:
-        # per-component sensible choice (similar to jacobian_tools scaled)
-        du_vec = 2.0 * np.sqrt(eps) * np.maximum(1.0, np.abs(u0))
-    else:
-        du_arr = np.asarray(du, dtype=float).ravel()
-        if du_arr.size == 1:
-            du_vec = np.repeat(float(du_arr), m_u)
-        elif du_arr.size == m_u:
-            du_vec = du_arr
+        # use external FD Jacobian if available
+        if external_evalJ is None:
+            raise RuntimeError("No analytic J_eval provided and external eval_Jf_FiniteDifference not available.")
+        # external function expects a column-shaped x (N,1)
+        x_col = x0_flat.reshape((N, 1))
+        J_res = external_evalJ(f_eval, x_col, p, u0)
+        # external function may return (J, dx) or J alone
+        if isinstance(J_res, tuple) and len(J_res) == 2:
+            J_fd, used_dx = J_res
         else:
-            raise ValueError("du must be scalar or length equal to len(u0)")
+            J_fd = J_res
+            used_dx = None
+        A = np.asarray(J_fd, dtype=float)
+        if A.shape != (N, N):
+            raise RuntimeError(f"External FD Jacobian returned shape {A.shape}, expected {(N,N)}")
 
+    # Compute Ju = df/du (N x m_u) via finite differences on u
     Ju = np.zeros((N, m_u), dtype=float)
+    # allow du to be scalar or vector
+    if np.isscalar(du):
+        du_vec = np.full(m_u, float(du))
+    else:
+        du_vec = np.asarray(du, dtype=float).ravel()
+        if du_vec.size != m_u:
+            raise ValueError("du must be scalar or length m_u vector")
+
+    # pick fd_method
+    if fd_method not in ('forward', 'central'):
+        raise ValueError("fd_method must be 'forward' or 'central'")
+
     for j in range(m_u):
-        delta = float(du_vec[j])
-        if delta <= 0:
-            raise ValueError("du perturbations must be positive")
-        ej = np.zeros(m_u); ej[j] = 1.0
-        if fd_method == 'central':
-            up = u0 + delta * ej
-            um = u0 - delta * ej
-            fp = _normalize_f_output(evalf(x0 if not was_col else x0.reshape((N,1)), p, up))
-            fm = _normalize_f_output(evalf(x0 if not was_col else x0.reshape((N,1)), p, um))
-            Ju[:, j] = (fp - fm) / (2.0 * delta)
-        elif fd_method == 'forward':
-            up = u0 + delta * ej
-            fp = _normalize_f_output(evalf(x0 if not was_col else x0.reshape((N,1)), p, up))
-            Ju[:, j] = (fp - f0) / delta
-        else:
-            raise ValueError("fd_method must be 'central' or 'forward'")
+        dj = du_vec[j]
+        if dj <= 0:
+            raise ValueError("du must be positive")
+        uj = u0.copy()
+        if fd_method == 'forward':
+            uj_plus = uj.copy(); uj_plus[j] = uj[j] + dj
+            f_plus = np.asarray(f_eval(x0_flat, p, uj_plus), dtype=float).ravel()
+            Ju[:, j] = (f_plus - f0) / dj
+        else:  # central
+            uj_plus = uj.copy(); uj_plus[j] = uj[j] + dj
+            uj_minus = uj.copy(); uj_minus[j] = uj[j] - dj
+            f_plus = np.asarray(f_eval(x0_flat, p, uj_plus), dtype=float).ravel()
+            f_minus = np.asarray(f_eval(x0_flat, p, uj_minus), dtype=float).ravel()
+            Ju[:, j] = (f_plus - f_minus) / (2.0 * dj)
 
-    # K0
-    K0 = f0 - A.dot(x0) - Ju.dot(u0)
+    # compute K0 = f0 - A x0 - Ju u0
+    K0 = f0 - A.dot(x0_flat) - Ju.dot(u0)
 
-    # B as [K0_col, Ju]
-    B = np.concatenate([K0.reshape((N,1)), Ju], axis=1)
+    # Build B = [K0 | Ju] shape (N, 1 + m_u)
+    B = np.zeros((N, 1 + m_u), dtype=float)
+    B[:, 0] = K0
+    if m_u > 0:
+        B[:, 1:] = Ju
 
-    return A, Ju, K0, B
+    return A, B
