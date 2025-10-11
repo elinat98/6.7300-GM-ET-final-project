@@ -1,0 +1,17 @@
+{
+  "omega_max": 0.876161550703738,
+  "omega_min": 0.01,
+  "recommended": 0.0876161550703738,
+  "info_max": {
+    "w_bad": 1.28,
+    "w_stable_initial": 0.64,
+    "w_high": 0.8809190212828993,
+    "w_low": 0.876161550703738
+  },
+  "info_min": {
+    "w_ref": 1e-06,
+    "w_good": 0.01,
+    "w_fail": 0.005,
+    "rel_tol": 1e-06
+  }
+}
