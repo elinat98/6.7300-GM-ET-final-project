@@ -21,7 +21,7 @@ x0 = np.array([10.0, 5.0, 2.0, 1.0, 0.2]).reshape((-1,1))
 
 def eval_u(t): return np.array([0.5, 0.1])
 
-w_values = [1e-3, 5e-3, 1e-2, 2e-2, 5e-2, 1e-1]
+w_values = [1e-1]
 
 final_states = []
 eig_reals = []
