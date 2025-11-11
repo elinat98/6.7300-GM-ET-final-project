@@ -2,7 +2,7 @@
 import numpy as np
 import numpy.testing as npt
 
-from linearize import linearize_f
+from PM2.linearize import linearize_f
 # external FD function used internally by linearize_f lives in tools; ensure package import path is correct in your project.
 
 def eval_linear_model(x, p, u):

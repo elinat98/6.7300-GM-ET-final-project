@@ -1,7 +1,7 @@
 # tests/test_multiple_rhs.py
 import numpy as np
 import numpy.testing as npt
-from multiple_rhs import steady_state_solutions, solve_multiple_rhs, condition_number
+from PM2.multiple_rhs import steady_state_solutions, solve_multiple_rhs, condition_number
 
 def make_invertible_matrix(N, seed=0):
     rng = np.random.RandomState(seed)
