@@ -110,9 +110,6 @@ Plots and reports:
 - Identifies the optimal FD step size balancing truncation and round-off errors.  
 This test directly supports PM2 task (C) *Conditioning: Analysis & Improvement*.
 
-To run all: ```bash 
-pytest -v -k "test_linearize or test_multiple_rhs or test_jacobian_condition_quick or test_jacobian_external_fd 
-```
 
 ---
 ### Quick start
