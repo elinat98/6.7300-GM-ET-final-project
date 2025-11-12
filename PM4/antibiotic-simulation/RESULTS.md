@@ -214,9 +214,9 @@ This figure demonstrates the improvement from naive to realistic mutation matric
 | Metric | Naive | Realistic | Biological Basis |
 |--------|-------|-----------|------------------|
 | **Mutation rate** | 1.67×10⁻³ | 4.55×10⁻³ | Drake (1991): μ₀ = 10⁻⁸ |
-| **Distance dependence** | ❌ Random | ✓ Exponential | Larger jumps rarer |
+| **Distance dependence** |  Random |  Exponential | Larger jumps rarer |
 | **Asymmetry** | 1.0× | 6.3× | Andersson & Hughes (2010) |
-| **Population scaling** | ❌ No | ✓ N=10⁷ | Clinical burden |
+| **Population scaling** | No |  N=10⁷ | Clinical burden |
 | **Connectivity** | 16.7% | 100.0% | All transitions possible |
 
 **Key Takeaway:** Every parameter in the realistic model has literature justification.
@@ -504,7 +504,7 @@ This figure shows how different mutation models predict different evolutionary o
 
 ---
 
-## 📁 Files Generated
+##  Files Generated
 
 1. **antibiotic_resistance_sweep.png** - Main results (6 panels)
 2. **mutation_matrix_comparison.png** - 5 mutation models structure

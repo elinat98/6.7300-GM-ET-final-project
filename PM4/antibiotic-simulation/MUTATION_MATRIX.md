@@ -89,11 +89,11 @@ Q = Q / Q.sum(axis=1, keepdims=True)
 ```
 
 **Problems:**
-1. ❌ Only adjacent genotypes can mutate
-2. ❌ After shuffling, adjacency is meaningless
-3. ❌ No biological justification for 2% rate
-4. ❌ Symmetric (ignores that breaking > building)
-5. ❌ Ignores phenotypic/genetic distance
+1.  Only adjacent genotypes can mutate
+2.  After shuffling, adjacency is meaningless
+3.  No biological justification for 2% rate
+4.  Symmetric (ignores that breaking > building)
+5.  Ignores phenotypic/genetic distance
 
 ### New Solution
 
@@ -108,11 +108,11 @@ Five biologically-realistic models:
 | `hotspot` | Hypermutable strains | Chronic infections |
 
 **Improvements:**
-- ✅ Based on empirical mutation rates (Drake 1991: 10⁻⁸)
-- ✅ Asymmetric (loss-of-function easier, Andersson & Hughes 2010)
-- ✅ Distance-dependent (exponential decay)
-- ✅ Population-scaled (N = 10⁷ cells)
-- ✅ Multiple mechanisms (point mutations, HGT)
+-  Based on empirical mutation rates (Drake 1991: 10⁻⁸)
+-  Asymmetric (loss-of-function easier, Andersson & Hughes 2010)
+-  Distance-dependent (exponential decay)
+-  Population-scaled (N = 10⁷ cells)
+-  Multiple mechanisms (point mutations, HGT)
 
 ---
 
