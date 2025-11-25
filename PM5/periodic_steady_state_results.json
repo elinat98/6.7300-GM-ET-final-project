@@ -1,0 +1,324 @@
+{
+  "period": 1.0,
+  "pulse_duration": 0.1,
+  "uC_pulse": 2.0,
+  "dt": 0.01,
+  "num_periods_simulated": 50,
+  "time_transient": 0.14455199241638184,
+  "convergence_period": null,
+  "time_to_convergence": null,
+  "convergence_results": [
+    {
+      "periods": 2.0,
+      "time": 2.0,
+      "converged": false,
+      "max_diff": 1.341720998609123
+    },
+    {
+      "periods": 3.0,
+      "time": 3.0,
+      "converged": false,
+      "max_diff": 1.2004955915083144
+    },
+    {
+      "periods": 4.0,
+      "time": 4.0,
+      "converged": false,
+      "max_diff": 1.011659986752611
+    },
+    {
+      "periods": 5.0,
+      "time": 5.0,
+      "converged": false,
+      "max_diff": 0.8547172738951909
+    },
+    {
+      "periods": 6.0,
+      "time": 6.0,
+      "converged": false,
+      "max_diff": 0.7230125498137747
+    },
+    {
+      "periods": 7.0,
+      "time": 7.0,
+      "converged": false,
+      "max_diff": 0.6132988835047497
+    },
+    {
+      "periods": 8.0,
+      "time": 8.0,
+      "converged": false,
+      "max_diff": 0.5305459726378183
+    },
+    {
+      "periods": 9.0,
+      "time": 9.0,
+      "converged": false,
+      "max_diff": 0.45971538771704035
+    },
+    {
+      "periods": 10.0,
+      "time": 10.0,
+      "converged": false,
+      "max_diff": 0.39894944011322186
+    },
+    {
+      "periods": 11.0,
+      "time": 11.0,
+      "converged": false,
+      "max_diff": 0.34674558773849373
+    },
+    {
+      "periods": 12.0,
+      "time": 12.0,
+      "converged": false,
+      "max_diff": 0.30184495432838876
+    },
+    {
+      "periods": 13.0,
+      "time": 13.0,
+      "converged": false,
+      "max_diff": 0.2631783681949891
+    },
+    {
+      "periods": 14.0,
+      "time": 14.0,
+      "converged": false,
+      "max_diff": 0.2298340311173166
+    },
+    {
+      "periods": 15.0,
+      "time": 15.0,
+      "converged": false,
+      "max_diff": 0.20103413322848285
+    },
+    {
+      "periods": 16.0,
+      "time": 16.0,
+      "converged": false,
+      "max_diff": 0.1761159003046826
+    },
+    {
+      "periods": 17.0,
+      "time": 17.0,
+      "converged": false,
+      "max_diff": 0.15451540504506167
+    },
+    {
+      "periods": 18.0,
+      "time": 18.0,
+      "converged": false,
+      "max_diff": 0.1357534700483507
+    },
+    {
+      "periods": 19.0,
+      "time": 19.0,
+      "converged": false,
+      "max_diff": 0.11942334249252062
+    },
+    {
+      "periods": 20.0,
+      "time": 20.0,
+      "converged": false,
+      "max_diff": 0.10539428821421071
+    },
+    {
+      "periods": 21.0,
+      "time": 21.0,
+      "converged": false,
+      "max_diff": 0.09276917758250125
+    },
+    {
+      "periods": 22.0,
+      "time": 22.0,
+      "converged": false,
+      "max_diff": 0.08181178062105121
+    },
+    {
+      "periods": 23.0,
+      "time": 23.0,
+      "converged": false,
+      "max_diff": 0.07401128288510406
+    },
+    {
+      "periods": 24.0,
+      "time": 24.0,
+      "converged": false,
+      "max_diff": 0.06763017956665274
+    },
+    {
+      "periods": 25.0,
+      "time": 25.0,
+      "converged": false,
+      "max_diff": 0.06209957005583444
+    },
+    {
+      "periods": 26.0,
+      "time": 26.0,
+      "converged": false,
+      "max_diff": 0.057287627582721434
+    },
+    {
+      "periods": 27.0,
+      "time": 27.0,
+      "converged": false,
+      "max_diff": 0.05308388635605543
+    },
+    {
+      "periods": 28.0,
+      "time": 28.0,
+      "converged": false,
+      "max_diff": 0.049395781305066944
+    },
+    {
+      "periods": 29.0,
+      "time": 29.0,
+      "converged": false,
+      "max_diff": 0.04614567528483016
+    },
+    {
+      "periods": 30.0,
+      "time": 30.0,
+      "converged": false,
+      "max_diff": 0.043268368277088465
+    },
+    {
+      "periods": 31.0,
+      "time": 31.0,
+      "converged": false,
+      "max_diff": 0.040709028906837474
+    },
+    {
+      "periods": 32.0,
+      "time": 32.0,
+      "converged": false,
+      "max_diff": 0.03842148108921606
+    },
+    {
+      "periods": 33.0,
+      "time": 33.0,
+      "converged": false,
+      "max_diff": 0.03636678479723643
+    },
+    {
+      "periods": 34.0,
+      "time": 34.0,
+      "converged": false,
+      "max_diff": 0.03451205911850208
+    },
+    {
+      "periods": 35.0,
+      "time": 35.0,
+      "converged": false,
+      "max_diff": 0.03321710677406431
+    },
+    {
+      "periods": 36.0,
+      "time": 36.0,
+      "converged": false,
+      "max_diff": 0.03472648192726924
+    },
+    {
+      "periods": 37.0,
+      "time": 37.0,
+      "converged": false,
+      "max_diff": 0.036054704628165624
+    },
+    {
+      "periods": 38.0,
+      "time": 38.0,
+      "converged": false,
+      "max_diff": 0.03722139217216203
+    },
+    {
+      "periods": 39.0,
+      "time": 39.0,
+      "converged": false,
+      "max_diff": 0.038243898191271164
+    },
+    {
+      "periods": 40.0,
+      "time": 40.0,
+      "converged": false,
+      "max_diff": 0.03913759842118525
+    },
+    {
+      "periods": 41.0,
+      "time": 41.0,
+      "converged": false,
+      "max_diff": 0.03991613582450437
+    },
+    {
+      "periods": 42.0,
+      "time": 42.0,
+      "converged": false,
+      "max_diff": 0.04059163162905488
+    },
+    {
+      "periods": 43.0,
+      "time": 43.0,
+      "converged": false,
+      "max_diff": 0.041174867676259996
+    },
+    {
+      "periods": 44.0,
+      "time": 44.0,
+      "converged": false,
+      "max_diff": 0.0412192552031545
+    },
+    {
+      "periods": 45.0,
+      "time": 45.0,
+      "converged": false,
+      "max_diff": 0.04195198557958291
+    },
+    {
+      "periods": 46.0,
+      "time": 46.0,
+      "converged": false,
+      "max_diff": 0.04244803400549291
+    },
+    {
+      "periods": 47.0,
+      "time": 47.0,
+      "converged": false,
+      "max_diff": 0.042784472798922835
+    },
+    {
+      "periods": 48.0,
+      "time": 48.0,
+      "converged": false,
+      "max_diff": 0.043040604745917754
+    },
+    {
+      "periods": 49.0,
+      "time": 49.0,
+      "converged": false,
+      "max_diff": 0.04323996810191755
+    },
+    {
+      "periods": 50.0,
+      "time": 50.0,
+      "converged": false,
+      "max_diff": 0.04339342706954685
+    }
+  ],
+  "time_periodic_solver": 0.3104867935180664,
+  "periodic_solver_converged": true,
+  "x_periodic": [
+    0.3337557728650786,
+    4.061368477284995,
+    15.706956607350213,
+    -50.77162741445769,
+    50.42069078056785,
+    2.728485459367978,
+    0.8412743903198193,
+    0.34774994032428785,
+    0.1628775902927255,
+    0.08148399250629777,
+    0.04217826330453432,
+    0.021955277472418218,
+    0.10946492470678815,
+    0.12517061597304516
+  ]
+}

@@ -1,0 +1,157 @@
+Warning: trapezoidal.py not found, will use alternative implementation
+======================================================================
+COMPREHENSIVE STABILITY AND ERROR ANALYSIS
+======================================================================
+Time range: [0.0, 5.0]
+Reference computation max time: 600.0s (10.0 min)
+
+[1/5] Setting up 12-genotype model...
+  Model initialized: 14 states
+
+[2/5] Computing reference solution (10-minute limit)...
+======================================================================
+COMPUTING REFERENCE SOLUTION
+======================================================================
+Time range: [0.0, 5.0]
+Convergence tolerance: εref = 1.00e-06
+Max computation time: 600.0 seconds
+----------------------------------------------------------------------
+
+Iteration 1: dt = 1.000000e-01
+  Iteration time: 0.00s, Total: 0.00s
+
+Iteration 2: dt = 5.000000e-02
+  Error: ||x_∆ti - x_∆ti-1||∞ = 2.575066e-02
+  Iteration time: 0.00s, Total: 0.00s
+
+Iteration 3: dt = 2.500000e-02
+  Error: ||x_∆ti - x_∆ti-1||∞ = 8.661265e-03
+  Iteration time: 0.01s, Total: 0.01s
+
+Iteration 4: dt = 1.250000e-02
+  Error: ||x_∆ti - x_∆ti-1||∞ = 4.203628e-03
+  Iteration time: 0.01s, Total: 0.02s
+
+Iteration 5: dt = 6.250000e-03
+  Error: ||x_∆ti - x_∆ti-1||∞ = 2.073176e-03
+  Iteration time: 0.02s, Total: 0.04s
+
+Iteration 6: dt = 3.125000e-03
+  Error: ||x_∆ti - x_∆ti-1||∞ = 1.029733e-03
+  Iteration time: 0.04s, Total: 0.09s
+
+Iteration 7: dt = 1.562500e-03
+  Error: ||x_∆ti - x_∆ti-1||∞ = 5.131879e-04
+  Iteration time: 0.09s, Total: 0.17s
+
+Iteration 8: dt = 7.812500e-04
+  Error: ||x_∆ti - x_∆ti-1||∞ = 2.561784e-04
+  Iteration time: 0.17s, Total: 0.35s
+
+Iteration 9: dt = 3.906250e-04
+  Error: ||x_∆ti - x_∆ti-1||∞ = 1.279859e-04
+  Iteration time: 0.35s, Total: 0.69s
+
+Iteration 10: dt = 1.953125e-04
+  Error: ||x_∆ti - x_∆ti-1||∞ = 6.396715e-05
+  Iteration time: 0.68s, Total: 1.37s
+
+Iteration 11: dt = 9.765625e-05
+  Error: ||x_∆ti - x_∆ti-1||∞ = 3.197714e-05
+  Iteration time: 1.39s, Total: 2.76s
+
+Iteration 12: dt = 4.882813e-05
+  Error: ||x_∆ti - x_∆ti-1||∞ = 1.598696e-05
+  Iteration time: 2.80s, Total: 5.56s
+
+Iteration 13: dt = 2.441406e-05
+  Error: ||x_∆ti - x_∆ti-1||∞ = 7.993079e-06
+  Iteration time: 5.60s, Total: 11.16s
+
+Iteration 14: dt = 1.220703e-05
+  Error: ||x_∆ti - x_∆ti-1||∞ = 3.996439e-06
+  Iteration time: 11.25s, Total: 22.40s
+
+Iteration 15: dt = 6.103516e-06
+  Error: ||x_∆ti - x_∆ti-1||∞ = 1.998195e-06
+  Iteration time: 22.54s, Total: 44.94s
+
+Iteration 16: dt = 3.051758e-06
+  Error: ||x_∆ti - x_∆ti-1||∞ = 9.990903e-07
+  Iteration time: 45.73s, Total: 90.67s
+
+✓ CONVERGED after 16 iterations
+  Final dt: 3.051758e-06
+  Final error: 9.990903e-07 < 1.00e-06
+  Total time: 90.67s
+
+[3/5] Finding stability boundary for Forward Euler...
+======================================================================
+FINDING STABILITY BOUNDARY FOR FORWARD EULER
+======================================================================
+✓ Found stable starting point: dt = 5.000000e-01
+
+Growing dt to find instability boundary...
+  dt = 7.500000e-01: ✓ stable
+  dt = 1.125000e+00: ✓ stable
+  dt = 1.687500e+00: ✓ stable
+  dt = 2.531250e+00: ✓ stable
+  dt = 3.796875e+00: ✓ stable
+  dt = 5.695312e+00: ✓ stable
+  dt = 4.324878e+01: ✓ stable
+  dt = 3.284204e+02: ✓ stable
+  dt = 2.493943e+03: ✓ stable
+  dt = 1.893838e+04: ✓ stable
+  dt = 1.438133e+05: ✓ stable
+  dt = 1.092082e+06: ✓ stable
+  dt = 8.292999e+06: ✓ stable
+  dt = 6.297496e+07: ✓ stable
+Warning: No instability found up to dt = 4.782161e+08
+
+Refining boundary with binary search...
+  Stable: dt = 3.188108e+08
+  Unstable: dt = 4.782161e+08
+  dt = 3.904618e+08: ✓ stable
+  dt = 4.751960e+08: ✓ stable
+
+✓ Stability boundary found:
+  ∆tunst = 4.751960e+08 (largest stable dt)
+  dt_unstable > 4.782161e+08
+
+[4/5] Computing error at instability boundary...
+
+  ∆tunst = 4.751960e+08
+  ϵunst = ||x(∆tunst) - xref||∞ = 3.518317e+01
+
+[5/5] Determining acceptable error level...
+  Reference scale: ||xref||∞ = 6.596000e+00
+  Acceptable relative error: 1.0%
+  ϵa = 6.596000e-02
+
+======================================================================
+COMPARISON: ϵa vs ϵunst
+======================================================================
+
+Case: ϵa (6.596000e-02) < ϵunst (3.518317e+01)
+  → Forward Euler can achieve acceptable error before instability
+  → Finding ∆ta that gives ϵa...
+
+Finding dt for error target ϵa = 6.596000e-02 using forward_euler
+  Search range: [3.051758e-06, 4.751960e+08]
+  dt = 3.808127e+01: error = 3.518317e+01, time = 0.000s
+  dt = 1.384860e-01: error = 5.091524e-02, time = 0.001s
+  dt = 1.407135e-01: error = 1.999976e-01, time = 0.001s
+
+✓ Found: dt = 1.384860e-01
+  Error: 5.091524e-02 (target: 6.596000e-02)
+  Computation time: 0.001s
+
+  ∆ta (Forward Euler) = 1.384860e-01
+  Safety ratio: ∆tunst / ∆ta = 3431364319.43
+  ✓ Safety margin sufficient (∆ta << ∆tunst)
+
+[SAVE] Saving results to PM5/stability_results.json...
+
+======================================================================
+ANALYSIS COMPLETE
+======================================================================

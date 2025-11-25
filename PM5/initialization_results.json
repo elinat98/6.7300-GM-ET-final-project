@@ -1,0 +1,13 @@
+{
+  "previous": {
+    "success": false
+  },
+  "feuler": {
+    "success": true,
+    "time": 0.24564194679260254,
+    "steps": 67,
+    "avg_newton_iters": 15.835820895522389,
+    "max_newton_iters": 50,
+    "failures": 1
+  }
+}

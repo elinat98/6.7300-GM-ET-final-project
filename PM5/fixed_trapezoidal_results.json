@@ -1,0 +1,35 @@
+[
+  {
+    "dt": 0.1,
+    "time": 0.14470386505126953,
+    "steps": 20,
+    "error": 2.604229302092204,
+    "newton_stats": {
+      "avg_iterations": 35.0,
+      "max_iterations": 50,
+      "failures": 2
+    }
+  },
+  {
+    "dt": 0.05,
+    "time": 0.2138817310333252,
+    "steps": 40,
+    "error": 2.605611573397928,
+    "newton_stats": {
+      "avg_iterations": 22.025,
+      "max_iterations": 50,
+      "failures": 1
+    }
+  },
+  {
+    "dt": 0.03,
+    "time": 0.24513721466064453,
+    "steps": 67,
+    "error": 2.6061107400954384,
+    "newton_stats": {
+      "avg_iterations": 15.835820895522389,
+      "max_iterations": 50,
+      "failures": 1
+    }
+  }
+]
